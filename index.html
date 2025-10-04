@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hassle Free Notes</title>
+  <link rel="stylesheet" href="styles/variables.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/themes.css">
+</head>
+<body data-theme="dark">
+  <div id="app">
+    <header class="app-header">
+      <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+        <span class="hamburger-icon">☰</span>
+      </button>
+      <h1 class="app-title">Hassle Free Notes</h1>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </header>
+
+    <main class="app-main">
+      <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+      <aside id="notes-sidebar" class="notes-sidebar">
+        <div class="sidebar-header">
+          <button id="new-note-btn" class="btn btn-primary">+ New Note</button>
+        </div>
+
+        <div class="sidebar-controls">
+          <div class="search-container">
+            <input
+              type="text"
+              id="notes-search"
+              class="search-input"
+              placeholder="Search notes..."
+              autocomplete="off"
+            />
+            <span class="search-icon">🔍</span>
+          </div>
+
+          <button id="view-toggle" class="view-toggle" title="Toggle view mode">
+            <span class="view-icon">📑</span>
+            <span class="view-label">Group by Site</span>
+          </button>
+        </div>
+
+        <div id="notes-list" class="notes-list">
+          <!-- Notes list will be rendered here -->
+        </div>
+      </aside>
+
+      <section class="editor-container">
+        <div id="editor-section" class="editor-section">
+          <div class="note-title-container">
+            <input
+              type="text"
+              id="note-title-input"
+              class="note-title-input"
+              placeholder="Untitled Note"
+              spellcheck="false"
+            />
+          </div>
+
+          <div class="editor-header">
+            <div id="toolbar" class="toolbar">
+              <button class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)">
+                <strong>B</strong>
+              </button>
+              <button class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)">
+                <em>I</em>
+              </button>
+              <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">
+                ≡
+              </button>
+            </div>
+            <div class="editor-status">
+              <span id="last-saved" class="last-saved"></span>
+            </div>
+          </div>
+
+          <div
+            id="editor"
+            class="editor"
+            contenteditable="true"
+            data-placeholder="Start typing your note..."
+            spellcheck="true"
+          >
+          </div>
+
+          <div class="editor-footer">
+            <button id="save-note-btn" class="btn btn-primary save-btn">
+              Save Note
+            </button>
+          </div>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          <div class="empty-state-content">
+            <h2>No note selected</h2>
+            <p>Create a new note or select an existing one from the sidebar</p>
+            <button id="empty-state-new-note-btn" class="btn btn-primary" style="margin-top: 24px; max-width: 200px;">
+              + New Note
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="dist/main.js"></script>
+</body>
+</html>

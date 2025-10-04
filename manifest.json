@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Hassle Free Notes",
+  "version": "1.0.0",
+  "description": "A cross-tab synchronized note-taking application",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Hassle Free Notes"
+  },
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "sidePanel",
+    "tabs",
+    "activeTab"
+  ],
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  }
+}

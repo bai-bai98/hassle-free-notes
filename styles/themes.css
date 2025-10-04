@@ -1,0 +1,56 @@
+/**
+ * Theme-specific styles and transitions
+ */
+
+/* Smooth theme transitions */
+body,
+.app-header,
+.notes-sidebar,
+.editor-header,
+.editor,
+.note-item,
+.btn,
+.toolbar-btn,
+.theme-toggle {
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--transition-normal);
+  transition-timing-function: ease;
+}
+
+/* Dark theme specific adjustments */
+[data-theme="dark"] {
+  /* Already defined in variables.css */
+}
+
+/* Light theme specific adjustments */
+[data-theme="light"] {
+  /* Already defined in variables.css */
+}
+
+/* Selection colors */
+::selection {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "hassle-free-notes",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Multi-tab synchronized note-taking Chrome extension",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.16",
+    "typescript": "^5.3.3"
+  }
+}
