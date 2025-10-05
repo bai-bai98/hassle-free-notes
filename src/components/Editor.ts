@@ -5,6 +5,7 @@
 
 import { Note } from '../types.js';
 import { StateManager } from '../core/state.js';
+import { sanitizeHtml } from '../utils/sanitize.js';
 
 export class Editor {
   private editorElement: HTMLElement;
@@ -194,11 +195,14 @@ export class Editor {
     if (note) {
       const selection = this.saveCursorPosition();
 
-      this.titleElement.value = note.title;
-      this.editorElement.innerHTML = note.content || '';
-      this.htmlEditorElement.value = note.content || '';
+      // Sanitize content before displaying
+      const sanitizedContent = sanitizeHtml(note.content || '');
 
-      if (selection && this.editorElement.innerHTML === note.content) {
+      this.titleElement.value = note.title;
+      this.editorElement.innerHTML = sanitizedContent;
+      this.htmlEditorElement.value = sanitizedContent;
+
+      if (selection && this.editorElement.innerHTML === sanitizedContent) {
         this.restoreCursorPosition(selection);
       }
 
@@ -300,22 +304,6 @@ export class Editor {
    */
   private updateStatus(text: string): void {
     this.statusElement.textContent = text;
-  }
-
-  /**
-   * Handle undo action
-   */
-  private handleUndo(): void {
-    if (!this.currentNote) return;
-    this.stateManager.undo(this.currentNote.id);
-  }
-
-  /**
-   * Handle redo action
-   */
-  private handleRedo(): void {
-    if (!this.currentNote) return;
-    this.stateManager.redo(this.currentNote.id);
   }
 
   /**

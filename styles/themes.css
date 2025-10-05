@@ -2,19 +2,21 @@
  * Theme-specific styles and transitions
  */
 
-/* Smooth theme transitions */
-body,
+/* Smooth theme transitions - optimized */
+body {
+  transition: background-color var(--transition-normal) ease, color var(--transition-normal) ease;
+}
+
 .app-header,
 .notes-sidebar,
-.editor-header,
-.editor,
+.editor-header {
+  transition: background-color var(--transition-normal) ease, border-color var(--transition-normal) ease;
+}
+
 .note-item,
 .btn,
-.toolbar-btn,
-.theme-toggle {
-  transition-property: background-color, color, border-color;
-  transition-duration: var(--transition-normal);
-  transition-timing-function: ease;
+.toolbar-btn {
+  transition: background-color var(--transition-fast) ease;
 }
 
 /* Dark theme specific adjustments */

@@ -1,5 +1,5 @@
 /**
- * Background service worker for Klar! Notes
+ * Background service worker for Hassle Free Notes
  * Handles context menu and side panel
  */
 

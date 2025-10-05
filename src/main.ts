@@ -7,6 +7,7 @@ import { StateManager } from './core/state.js';
 import { Editor } from './components/Editor.js';
 import { Toolbar } from './components/Toolbar.js';
 import { NotesList } from './components/NotesList.js';
+import { toast } from './components/Toast.js';
 
 class App {
   private stateManager: StateManager;
@@ -68,6 +69,9 @@ class App {
     this.toolbar = new Toolbar(toolbarElement, editorElement, this.stateManager);
     this.notesList = new NotesList(notesListElement, newNoteButton, notesSearch, viewToggle, this.stateManager);
 
+    // Check BroadcastChannel support and warn if unavailable
+    this.checkCrossTabSyncSupport();
+
     // Set up theme toggle
     this.setupThemeToggle(themeToggle);
 
@@ -105,6 +109,19 @@ class App {
     }
 
     console.log('Hassle Free Notes initialized successfully');
+  }
+
+  /**
+   * Check if BroadcastChannel is supported and warn if not
+   */
+  private checkCrossTabSyncSupport(): void {
+    if (typeof BroadcastChannel === 'undefined') {
+      toast.warning(
+        'Cross-tab sync unavailable in this browser. Notes will not sync between tabs.',
+        8000
+      );
+      console.warn('BroadcastChannel API is not supported in this browser');
+    }
   }
 
   /**

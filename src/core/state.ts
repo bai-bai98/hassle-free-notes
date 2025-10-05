@@ -7,6 +7,8 @@ import { Note, BroadcastMessage, EventCallback, NoteHistory, HistoryState } from
 import { StorageService } from './storage.js';
 import { BroadcastService } from './broadcast.js';
 import { getCurrentSiteInfo } from '../utils/url.js';
+import { debounce } from '../utils/debounce.js';
+import { HISTORY } from '../constants.js';
 
 export class StateManager {
   private storage: StorageService;
@@ -15,14 +17,19 @@ export class StateManager {
   private currentNoteId: string | null = null;
   private eventListeners: Map<string, Set<EventCallback>> = new Map();
   private noteHistories: Map<string, NoteHistory> = new Map();
-  private readonly MAX_HISTORY_SIZE = 50;
+  private readonly MAX_HISTORY_SIZE = HISTORY.MAX_SIZE;
+  private debouncedRecordHistory: Map<string, () => void> = new Map();
+  private broadcastMessageHandler: (message: BroadcastMessage) => void;
 
   constructor() {
     this.storage = new StorageService();
     this.broadcast = new BroadcastService();
 
+    // Store handler reference for cleanup
+    this.broadcastMessageHandler = (message) => this.handleBroadcastMessage(message);
+
     // Listen to broadcast messages from other tabs
-    this.broadcast.onMessage((message) => this.handleBroadcastMessage(message));
+    this.broadcast.onMessage(this.broadcastMessageHandler);
 
     // Load initial notes
     this.loadNotes();
@@ -254,9 +261,25 @@ export class StateManager {
   }
 
   /**
-   * Record current state to history before making changes
+   * Record current state to history before making changes (debounced)
    */
   recordHistory(noteId: string): void {
+    // Get or create debounced function for this note
+    if (!this.debouncedRecordHistory.has(noteId)) {
+      this.debouncedRecordHistory.set(
+        noteId,
+        debounce(() => this.recordHistoryImmediate(noteId), HISTORY.DEBOUNCE_DELAY)
+      );
+    }
+
+    // Call debounced version
+    this.debouncedRecordHistory.get(noteId)!();
+  }
+
+  /**
+   * Actually record history (called by debounced version)
+   */
+  private recordHistoryImmediate(noteId: string): void {
     const note = this.notes.get(noteId);
     if (!note) return;
 
@@ -264,6 +287,11 @@ export class StateManager {
     this.initializeHistory(note);
 
     const history = this.noteHistories.get(noteId)!;
+
+    // Check if state has actually changed (prevent duplicates)
+    if (this.isHistoryStateSame(history.present, note)) {
+      return;
+    }
 
     // Push current present to past
     history.past.push({ ...history.present });
@@ -285,6 +313,13 @@ export class StateManager {
 
     // Emit event so UI can update button states
     this.emit('history-changed', noteId);
+  }
+
+  /**
+   * Check if history state is the same as note (for deduplication)
+   */
+  private isHistoryStateSame(state: HistoryState, note: Note): boolean {
+    return state.content === note.content && state.title === note.title;
   }
 
   /**
@@ -361,8 +396,11 @@ export class StateManager {
    * Cleanup
    */
   destroy(): void {
+    // Remove broadcast message listener to prevent memory leaks
+    this.broadcast.offMessage(this.broadcastMessageHandler);
     this.broadcast.close();
     this.eventListeners.clear();
     this.noteHistories.clear();
+    this.debouncedRecordHistory.clear();
   }
 }
