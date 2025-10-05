@@ -7,6 +7,7 @@ import { Note } from '../types.js';
 import { StateManager } from '../core/state.js';
 import { getCurrentSiteInfo, groupByHostname } from '../utils/url.js';
 import { DeletePopup } from './DeletePopup.js';
+import { debounce } from '../utils/debounce.js';
 
 export class NotesList {
   private listElement: HTMLElement;
@@ -23,6 +24,9 @@ export class NotesList {
   private draggedOverNoteId: string | null = null;
   private draggedOverGroup: string | null = null;
   private deletePopup: DeletePopup;
+  private sharedEscapeDiv: HTMLDivElement;
+  private debouncedRender: () => void;
+  private renderScheduled: boolean = false;
 
   constructor(
     listElement: HTMLElement,
@@ -37,6 +41,12 @@ export class NotesList {
     this.viewToggle = viewToggle;
     this.stateManager = stateManager;
     this.deletePopup = new DeletePopup();
+
+    // Create shared div for HTML escaping
+    this.sharedEscapeDiv = document.createElement('div');
+
+    // Debounce render to prevent excessive re-renders
+    this.debouncedRender = debounce(() => this.render(), 100);
 
     this.initCurrentHostname();
     this.setupEventListeners();
@@ -114,12 +124,12 @@ export class NotesList {
     this.listElement.addEventListener('drop', (e) => this.handleDrop(e));
     this.listElement.addEventListener('dragend', (e) => this.handleDragEnd(e));
 
-    // Listen to state changes
-    this.stateManager.on('notes-loaded', () => this.render());
-    this.stateManager.on('note-created', () => this.render());
-    this.stateManager.on('note-updated', () => this.render());
-    this.stateManager.on('note-deleted', () => this.render());
-    this.stateManager.on('note-changed', () => this.render());
+    // Listen to state changes - use debounced render
+    this.stateManager.on('notes-loaded', () => this.debouncedRender());
+    this.stateManager.on('note-created', () => this.debouncedRender());
+    this.stateManager.on('note-updated', () => this.debouncedRender());
+    this.stateManager.on('note-deleted', () => this.debouncedRender());
+    this.stateManager.on('note-changed', () => this.debouncedRender());
     this.stateManager.on('note-selected', (note: Note | null) => {
       this.currentNoteId = note?.id || null;
       this.updateActiveState();
@@ -181,12 +191,13 @@ export class NotesList {
   }
 
   /**
-   * Extract plain text from HTML content
+   * Extract plain text from HTML content (using shared div for performance)
    */
   private extractPlainText(html: string): string {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || tempDiv.innerText || '';
+    this.sharedEscapeDiv.innerHTML = html;
+    const text = this.sharedEscapeDiv.textContent || this.sharedEscapeDiv.innerText || '';
+    this.sharedEscapeDiv.innerHTML = ''; // Clean up
+    return text;
   }
 
   /**
@@ -324,12 +335,12 @@ export class NotesList {
   }
 
   /**
-   * Get preview text from note content
+   * Get preview text from note content (using shared div for performance)
    */
   private getPreview(content: string): string {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    const text = tempDiv.textContent || tempDiv.innerText || '';
+    this.sharedEscapeDiv.innerHTML = content;
+    const text = this.sharedEscapeDiv.textContent || this.sharedEscapeDiv.innerText || '';
+    this.sharedEscapeDiv.innerHTML = ''; // Clean up
 
     return text.substring(0, 50) + (text.length > 50 ? '...' : '');
   }
@@ -357,12 +368,11 @@ export class NotesList {
   }
 
   /**
-   * Escape HTML to prevent XSS
+   * Escape HTML to prevent XSS (using shared div for performance)
    */
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    this.sharedEscapeDiv.textContent = text;
+    return this.sharedEscapeDiv.innerHTML;
   }
 
   /**
@@ -559,5 +569,12 @@ export class NotesList {
     } else if (targetGroup === 'Uncategorized') {
       this.stateManager.updateNoteSite(noteId, '', '');
     }
+  }
+
+  /**
+   * Cleanup - destroy delete popup
+   */
+  destroy(): void {
+    this.deletePopup.destroy();
   }
 }

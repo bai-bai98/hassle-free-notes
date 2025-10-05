@@ -169,4 +169,11 @@ export class DeletePopup {
     this.onConfirm = null;
     this.onCancel = null;
   }
+
+  /**
+   * Cleanup - ensure popup is closed
+   */
+  destroy(): void {
+    this.close();
+  }
 }

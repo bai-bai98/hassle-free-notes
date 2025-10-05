@@ -227,6 +227,15 @@ class App {
    * Clean up on app close
    */
   destroy(): void {
+    // Cleanup components
+    if (this.toolbar) {
+      this.toolbar.destroy();
+    }
+    if (this.notesList) {
+      this.notesList.destroy();
+    }
+
+    // Cleanup state manager
     this.stateManager.destroy();
   }
 }

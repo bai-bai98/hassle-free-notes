@@ -4,6 +4,7 @@
  */
 
 import { StateManager } from '../core/state.js';
+import { debounce } from '../utils/debounce.js';
 
 export class Toolbar {
   private toolbarElement: HTMLElement;
@@ -17,6 +18,8 @@ export class Toolbar {
   private redoBtn: HTMLButtonElement;
   private savedSelection: Range | null = null;
   private currentNoteId: string | null = null;
+  private debouncedUpdateButtonStates: () => void;
+  private abortController: AbortController = new AbortController();
 
   constructor(toolbarElement: HTMLElement, editorElement: HTMLElement, stateManager: StateManager) {
     this.toolbarElement = toolbarElement;
@@ -32,6 +35,9 @@ export class Toolbar {
     // Get undo/redo buttons
     this.undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
     this.redoBtn = document.getElementById('redo-btn') as HTMLButtonElement;
+
+    // Debounce button state updates to reduce CPU usage
+    this.debouncedUpdateButtonStates = debounce(() => this.updateButtonStates(), 50);
 
     this.setupEventListeners();
   }
@@ -103,14 +109,14 @@ export class Toolbar {
     document.addEventListener('click', () => {
       this.closeDropdown(this.fontSizeMenu);
       this.closeDropdown(this.textColorMenu);
-    });
+    }, { signal: this.abortController.signal });
 
-    // Update button states on selection change
+    // Update button states on selection change (debounced)
     document.addEventListener('selectionchange', () => {
       if (document.activeElement === this.editorElement) {
-        this.updateButtonStates();
+        this.debouncedUpdateButtonStates();
       }
-    });
+    }, { signal: this.abortController.signal });
 
     // Handle undo/redo buttons
     this.undoBtn.addEventListener('click', () => this.handleUndo());
@@ -744,5 +750,12 @@ export class Toolbar {
 
     this.undoBtn.disabled = !this.stateManager.canUndo(this.currentNoteId);
     this.redoBtn.disabled = !this.stateManager.canRedo(this.currentNoteId);
+  }
+
+  /**
+   * Cleanup - remove event listeners
+   */
+  destroy(): void {
+    this.abortController.abort();
   }
 }
