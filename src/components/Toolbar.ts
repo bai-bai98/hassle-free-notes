@@ -6,10 +6,21 @@
 export class Toolbar {
   private toolbarElement: HTMLElement;
   private editorElement: HTMLElement;
+  private fontSizeBtn: HTMLElement;
+  private fontSizeMenu: HTMLElement;
+  private textColorBtn: HTMLElement;
+  private textColorMenu: HTMLElement;
+  private savedSelection: Range | null = null;
 
   constructor(toolbarElement: HTMLElement, editorElement: HTMLElement) {
     this.toolbarElement = toolbarElement;
     this.editorElement = editorElement;
+
+    // Get dropdown elements
+    this.fontSizeBtn = document.getElementById('font-size-btn')!;
+    this.fontSizeMenu = document.getElementById('font-size-menu')!;
+    this.textColorBtn = document.getElementById('text-color-btn')!;
+    this.textColorMenu = document.getElementById('text-color-menu')!;
 
     this.setupEventListeners();
   }
@@ -30,6 +41,57 @@ export class Toolbar {
           this.executeCommand(command);
         }
       }
+    });
+
+    // Handle font size dropdown
+    this.fontSizeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleDropdown(this.fontSizeMenu);
+      this.closeDropdown(this.textColorMenu);
+    });
+
+    // Handle font size selection
+    this.fontSizeMenu.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('dropdown-item')) {
+        const size = target.dataset.size;
+        if (size) {
+          this.applyFontSize(size);
+          this.closeDropdown(this.fontSizeMenu);
+        }
+      }
+    });
+
+    // Handle text color dropdown
+    this.textColorBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      // Save current selection before opening dropdown
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        this.savedSelection = selection.getRangeAt(0).cloneRange();
+      }
+
+      this.toggleDropdown(this.textColorMenu);
+      this.closeDropdown(this.fontSizeMenu);
+    });
+
+    // Handle color presets
+    this.textColorMenu.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('color-preset')) {
+        const color = target.dataset.color;
+        if (color) {
+          this.applyTextColor(color);
+          this.closeDropdown(this.textColorMenu);
+        }
+      }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      this.closeDropdown(this.fontSizeMenu);
+      this.closeDropdown(this.textColorMenu);
     });
 
     // Update button states on selection change
@@ -64,7 +126,7 @@ export class Toolbar {
         'italic': 'i',
         'underline': 'u',
         'strikethrough': 's',
-        'code': 'code'
+        'code': 'code',
       };
 
       const tag = commandTagMap[command];
@@ -94,7 +156,7 @@ export class Toolbar {
       'i': ['I', 'EM'],
       'u': ['U'],
       's': ['S', 'STRIKE', 'DEL'],
-      'code': ['CODE']
+      'code': ['CODE'],
     };
 
     const tagNames = tagVariants[tag] || [tag.toUpperCase()];
@@ -284,85 +346,6 @@ export class Toolbar {
   }
 
   /**
-   * Unwrap formatting from selected text
-   */
-  private unwrapFormat(range: Range, tagName: string): void {
-    const container = range.commonAncestorContainer;
-    let formatNode: HTMLElement | null = null;
-
-    // Find the formatting element
-    if (container.nodeType === Node.TEXT_NODE) {
-      formatNode = container.parentElement;
-    } else if (container instanceof HTMLElement) {
-      formatNode = container;
-    }
-
-    // Traverse up to find the tag
-    while (formatNode && formatNode !== this.editorElement) {
-      if (formatNode.tagName === tagName) {
-        break;
-      }
-      formatNode = formatNode.parentElement;
-    }
-
-    if (!formatNode || formatNode.tagName !== tagName) return;
-
-    // CRITICAL FIX: Save range boundaries BEFORE extracting contents
-    const startContainer = range.startContainer;
-    const startOffset = range.startOffset;
-    const endContainer = range.endContainer;
-    const endOffset = range.endOffset;
-
-    // Get the selected content within the format tag
-    const selectedContent = range.extractContents();
-
-    // Get content before selection within the format tag
-    const beforeRange = document.createRange();
-    beforeRange.setStart(formatNode, 0);
-    beforeRange.setEnd(startContainer, startOffset);
-    const beforeContent = beforeRange.cloneContents();
-
-    // Get content after selection within the format tag
-    const afterRange = document.createRange();
-    afterRange.setStart(endContainer, endOffset);
-    afterRange.setEnd(formatNode, formatNode.childNodes.length);
-    const afterContent = afterRange.cloneContents();
-
-    // Create new structure
-    const parent = formatNode.parentNode!;
-    const fragment = document.createDocumentFragment();
-
-    // Add before part (still formatted) if it has content
-    if (beforeContent.textContent && beforeContent.textContent.length > 0) {
-      const beforeTag = document.createElement(tagName.toLowerCase());
-      beforeTag.appendChild(beforeContent);
-      fragment.appendChild(beforeTag);
-    }
-
-    // Add selected part (unformatted)
-    fragment.appendChild(selectedContent);
-
-    // Add after part (still formatted) if it has content
-    if (afterContent.textContent && afterContent.textContent.length > 0) {
-      const afterTag = document.createElement(tagName.toLowerCase());
-      afterTag.appendChild(afterContent);
-      fragment.appendChild(afterTag);
-    }
-
-    // Replace the original format node
-    parent.replaceChild(fragment, formatNode);
-
-    // Restore selection on the unformatted content
-    const selection = window.getSelection();
-    if (selection && selectedContent.childNodes.length > 0) {
-      const newRange = document.createRange();
-      newRange.selectNodeContents(selectedContent.childNodes[0]);
-      selection.removeAllRanges();
-      selection.addRange(newRange);
-    }
-  }
-
-  /**
    * Toggle list formatting
    */
   private toggleList(listTag: 'ul' | 'ol', selection: Selection, range: Range): void {
@@ -380,7 +363,7 @@ export class Toolbar {
     // Find if we're inside a UL or OL
     while (currentNode && currentNode !== this.editorElement) {
       if (currentNode instanceof HTMLElement &&
-          (currentNode.tagName === 'UL' || currentNode.tagName === 'OL')) {
+        (currentNode.tagName === 'UL' || currentNode.tagName === 'OL')) {
         listNode = currentNode;
         break;
       }
@@ -492,6 +475,8 @@ export class Toolbar {
           e.preventDefault();
           this.executeCommand('underline');
           break;
+        default:
+          break;
       }
     }
   }
@@ -565,5 +550,131 @@ export class Toolbar {
         button.classList.remove('active');
       }
     });
+  }
+
+  /**
+   * Toggle dropdown visibility
+   */
+  private toggleDropdown(menu: HTMLElement): void {
+    const isVisible = menu.style.display === 'block';
+    menu.style.display = isVisible ? 'none' : 'block';
+  }
+
+  /**
+   * Close dropdown
+   */
+  private closeDropdown(menu: HTMLElement): void {
+    menu.style.display = 'none';
+  }
+
+  /**
+   * Apply font size to selected text
+   */
+  private applyFontSize(size: string): void {
+    this.editorElement.focus();
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+
+    if (!this.editorElement.contains(range.commonAncestorContainer)) return;
+
+    if (selection.isCollapsed) {
+      // No selection - insert span for typing
+      const span = document.createElement('span');
+      span.style.fontSize = size;
+      span.appendChild(document.createTextNode('\u200B'));
+      range.insertNode(span);
+
+      // Move cursor inside
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      newRange.collapse(false);
+      selection.addRange(newRange);
+    } else {
+      // Wrap selection in span
+      const span = document.createElement('span');
+      span.style.fontSize = size;
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+
+      // Insert zero-width space after
+      const zeroWidthSpace = document.createTextNode('\u200B');
+      if (span.nextSibling) {
+        span.parentNode!.insertBefore(zeroWidthSpace, span.nextSibling);
+      } else {
+        span.parentNode!.appendChild(zeroWidthSpace);
+      }
+
+      // Position cursor after
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.setStartAfter(zeroWidthSpace);
+      newRange.collapse(true);
+      selection.addRange(newRange);
+    }
+  }
+
+  /**
+   * Apply text color to selected text
+   */
+  private applyTextColor(color: string): void {
+    this.editorElement.focus();
+
+    // Use saved selection if available, otherwise get current selection
+    let range: Range | null = null;
+    const selection = window.getSelection();
+
+    if (this.savedSelection) {
+      range = this.savedSelection;
+      this.savedSelection = null; // Clear saved selection after use
+    } else if (selection && selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+    }
+
+    if (!range) return;
+    if (!this.editorElement.contains(range.commonAncestorContainer)) return;
+
+    if (range.collapsed) {
+      // No selection - insert span for typing
+      const span = document.createElement('span');
+      span.style.color = color;
+      span.appendChild(document.createTextNode('\u200B'));
+      range.insertNode(span);
+
+      // Move cursor inside
+      if (selection) {
+        selection.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        newRange.collapse(false);
+        selection.addRange(newRange);
+      }
+    } else {
+      // Wrap selection in span
+      const span = document.createElement('span');
+      span.style.color = color;
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+
+      // Insert zero-width space after
+      const zeroWidthSpace = document.createTextNode('\u200B');
+      if (span.nextSibling) {
+        span.parentNode!.insertBefore(zeroWidthSpace, span.nextSibling);
+      } else {
+        span.parentNode!.appendChild(zeroWidthSpace);
+      }
+
+      // Position cursor after
+      if (selection) {
+        selection.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.setStartAfter(zeroWidthSpace);
+        newRange.collapse(true);
+        selection.addRange(newRange);
+      }
+    }
   }
 }

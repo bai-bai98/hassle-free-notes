@@ -9,7 +9,6 @@ import { StateManager } from '../core/state.js';
 export class Editor {
   private editorElement: HTMLElement;
   private htmlEditorElement: HTMLTextAreaElement;
-  private htmlToggleButton: HTMLButtonElement;
   private titleElement: HTMLInputElement;
   private statusElement: HTMLElement;
   private saveButton: HTMLButtonElement;
@@ -34,7 +33,6 @@ export class Editor {
 
     // Get HTML editor elements
     this.htmlEditorElement = document.getElementById('html-editor') as HTMLTextAreaElement;
-    this.htmlToggleButton = document.getElementById('html-toggle-btn') as HTMLButtonElement;
 
     this.setupEventListeners();
   }
@@ -60,9 +58,6 @@ export class Editor {
 
     // Handle keyboard shortcuts
     this.editorElement.addEventListener('keydown', (e) => this.handleKeyDown(e));
-
-    // Handle HTML toggle button
-    this.htmlToggleButton.addEventListener('click', () => this.toggleHtmlMode());
 
     // Handle save button click
     this.saveButton.addEventListener('click', () => {
@@ -149,29 +144,6 @@ export class Editor {
   }
 
   /**
-   * Toggle between visual and HTML edit modes
-   */
-  private toggleHtmlMode(): void {
-    this.isHtmlMode = !this.isHtmlMode;
-
-    if (this.isHtmlMode) {
-      // Switching to HTML mode
-      // Sync content from visual editor to HTML editor
-      this.htmlEditorElement.value = this.editorElement.innerHTML;
-      this.editorElement.style.display = 'none';
-      this.htmlEditorElement.style.display = 'block';
-      this.htmlToggleButton.classList.add('active');
-    } else {
-      // Switching to visual mode
-      // Sync content from HTML editor to visual editor
-      this.editorElement.innerHTML = this.htmlEditorElement.value;
-      this.htmlEditorElement.style.display = 'none';
-      this.editorElement.style.display = 'block';
-      this.htmlToggleButton.classList.remove('active');
-    }
-  }
-
-  /**
    * Save the current note
    */
   private saveNote(): void {
@@ -197,15 +169,12 @@ export class Editor {
     this.currentNote = note;
 
     if (note) {
-      // Save cursor position
       const selection = this.saveCursorPosition();
 
-      // Load title and content
       this.titleElement.value = note.title;
       this.editorElement.innerHTML = note.content || '';
       this.htmlEditorElement.value = note.content || '';
 
-      // Restore cursor if this is an update, not initial load
       if (selection && this.editorElement.innerHTML === note.content) {
         this.restoreCursorPosition(selection);
       }
@@ -223,19 +192,15 @@ export class Editor {
    * Update editor when note is changed externally (from another tab)
    */
   private updateFromExternal(note: Note): void {
-    // Only update if content has actually changed
     if (this.editorElement.innerHTML === note.content && this.titleElement.value === note.title) return;
 
-    // Save cursor position
     const selection = this.saveCursorPosition();
 
-    // Update title and content
     this.currentNote = note;
     this.titleElement.value = note.title;
     this.editorElement.innerHTML = note.content;
 
-    // Restore cursor position
-    this.restoreCursorPosition(selection);
+  this.restoreCursorPosition(selection);
 
     this.updateStatus('Updated from another tab');
     setTimeout(() => this.updateStatus(''), 2000);
