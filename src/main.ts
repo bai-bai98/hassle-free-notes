@@ -65,7 +65,7 @@ class App {
 
     // Initialize components
     this.editor = new Editor(editorElement, titleElement, statusElement, saveButton, this.stateManager);
-    this.toolbar = new Toolbar(toolbarElement, editorElement);
+    this.toolbar = new Toolbar(toolbarElement, editorElement, this.stateManager);
     this.notesList = new NotesList(notesListElement, newNoteButton, notesSearch, viewToggle, this.stateManager);
 
     // Set up theme toggle

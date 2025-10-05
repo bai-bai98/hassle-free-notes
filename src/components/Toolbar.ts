@@ -3,24 +3,35 @@
  * Supports bold, italic, and bullet lists
  */
 
+import { StateManager } from '../core/state.js';
+
 export class Toolbar {
   private toolbarElement: HTMLElement;
   private editorElement: HTMLElement;
+  private stateManager: StateManager;
   private fontSizeBtn: HTMLElement;
   private fontSizeMenu: HTMLElement;
   private textColorBtn: HTMLElement;
   private textColorMenu: HTMLElement;
+  private undoBtn: HTMLButtonElement;
+  private redoBtn: HTMLButtonElement;
   private savedSelection: Range | null = null;
+  private currentNoteId: string | null = null;
 
-  constructor(toolbarElement: HTMLElement, editorElement: HTMLElement) {
+  constructor(toolbarElement: HTMLElement, editorElement: HTMLElement, stateManager: StateManager) {
     this.toolbarElement = toolbarElement;
     this.editorElement = editorElement;
+    this.stateManager = stateManager;
 
     // Get dropdown elements
     this.fontSizeBtn = document.getElementById('font-size-btn')!;
     this.fontSizeMenu = document.getElementById('font-size-menu')!;
     this.textColorBtn = document.getElementById('text-color-btn')!;
     this.textColorMenu = document.getElementById('text-color-menu')!;
+
+    // Get undo/redo buttons
+    this.undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
+    this.redoBtn = document.getElementById('redo-btn') as HTMLButtonElement;
 
     this.setupEventListeners();
   }
@@ -99,6 +110,23 @@ export class Toolbar {
       if (document.activeElement === this.editorElement) {
         this.updateButtonStates();
       }
+    });
+
+    // Handle undo/redo buttons
+    this.undoBtn.addEventListener('click', () => this.handleUndo());
+    this.redoBtn.addEventListener('click', () => this.handleRedo());
+
+    // Listen for history changes to update button states
+    this.stateManager.on('history-changed', (noteId: string) => {
+      if (this.currentNoteId === noteId) {
+        this.updateHistoryButtons();
+      }
+    });
+
+    // Listen for note selection to track current note
+    this.stateManager.on('note-selected', (note: any) => {
+      this.currentNoteId = note ? note.id : null;
+      this.updateHistoryButtons();
     });
 
     // Handle keyboard shortcuts
@@ -676,5 +704,45 @@ export class Toolbar {
         selection.addRange(newRange);
       }
     }
+  }
+
+  /**
+   * Handle undo action
+   */
+  private handleUndo(): void {
+    if (!this.currentNoteId) return;
+
+    const previousState = this.stateManager.undo(this.currentNoteId);
+    if (previousState) {
+      // StateManager and Editor will handle the state restoration
+      this.updateHistoryButtons();
+    }
+  }
+
+  /**
+   * Handle redo action
+   */
+  private handleRedo(): void {
+    if (!this.currentNoteId) return;
+
+    const nextState = this.stateManager.redo(this.currentNoteId);
+    if (nextState) {
+      // StateManager and Editor will handle the state restoration
+      this.updateHistoryButtons();
+    }
+  }
+
+  /**
+   * Update undo/redo button states
+   */
+  private updateHistoryButtons(): void {
+    if (!this.currentNoteId) {
+      this.undoBtn.disabled = true;
+      this.redoBtn.disabled = true;
+      return;
+    }
+
+    this.undoBtn.disabled = !this.stateManager.canUndo(this.currentNoteId);
+    this.redoBtn.disabled = !this.stateManager.canRedo(this.currentNoteId);
   }
 }

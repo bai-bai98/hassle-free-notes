@@ -122,6 +122,11 @@
     outline-offset: 2px;
 }
 
+.toolbar-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .toolbar-divider {
     width: 1px;
     height: 24px;

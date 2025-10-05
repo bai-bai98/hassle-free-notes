@@ -3,7 +3,7 @@
  * Coordinates storage, broadcast, and UI updates
  */
 
-import { Note, BroadcastMessage, EventCallback } from '../types.js';
+import { Note, BroadcastMessage, EventCallback, NoteHistory, HistoryState } from '../types.js';
 import { StorageService } from './storage.js';
 import { BroadcastService } from './broadcast.js';
 import { getCurrentSiteInfo } from '../utils/url.js';
@@ -14,6 +14,8 @@ export class StateManager {
   private notes: Map<string, Note> = new Map();
   private currentNoteId: string | null = null;
   private eventListeners: Map<string, Set<EventCallback>> = new Map();
+  private noteHistories: Map<string, NoteHistory> = new Map();
+  private readonly MAX_HISTORY_SIZE = 50;
 
   constructor() {
     this.storage = new StorageService();
@@ -119,6 +121,8 @@ export class StateManager {
 
     if (this.storage.saveNote(note)) {
       this.notes.set(note.id, note);
+      // Initialize empty history for new note
+      this.initializeHistory(note);
       this.broadcast.broadcast({ type: 'note-created', noteId: note.id, note });
       this.emit('note-created', note);
       return note;
@@ -159,6 +163,8 @@ export class StateManager {
 
     if (this.storage.deleteNote(id)) {
       this.notes.delete(id);
+      // Clear history for deleted note
+      this.clearHistory(id);
       this.broadcast.broadcast({ type: 'note-deleted', noteId: id });
       this.emit('note-deleted', id);
 
@@ -231,10 +237,132 @@ export class StateManager {
   }
 
   /**
+   * Initialize history for a note
+   */
+  private initializeHistory(note: Note): void {
+    if (!this.noteHistories.has(note.id)) {
+      this.noteHistories.set(note.id, {
+        past: [],
+        present: {
+          content: note.content,
+          title: note.title,
+          timestamp: Date.now()
+        },
+        future: []
+      });
+    }
+  }
+
+  /**
+   * Record current state to history before making changes
+   */
+  recordHistory(noteId: string): void {
+    const note = this.notes.get(noteId);
+    if (!note) return;
+
+    // Initialize history if it doesn't exist
+    this.initializeHistory(note);
+
+    const history = this.noteHistories.get(noteId)!;
+
+    // Push current present to past
+    history.past.push({ ...history.present });
+
+    // Limit past size
+    if (history.past.length > this.MAX_HISTORY_SIZE) {
+      history.past.shift(); // Remove oldest
+    }
+
+    // Clear future (new changes invalidate redo)
+    history.future = [];
+
+    // Update present
+    history.present = {
+      content: note.content,
+      title: note.title,
+      timestamp: Date.now()
+    };
+
+    // Emit event so UI can update button states
+    this.emit('history-changed', noteId);
+  }
+
+  /**
+   * Undo - revert to previous state
+   */
+  undo(noteId: string): HistoryState | null {
+    const history = this.noteHistories.get(noteId);
+    if (!history || history.past.length === 0) return null;
+
+    // Move present to future
+    history.future.push({ ...history.present });
+
+    // Pop from past
+    const previousState = history.past.pop()!;
+
+    // Set as present
+    history.present = previousState;
+
+    // Emit events
+    this.emit('history-changed', noteId);
+    this.emit('undo-applied', noteId, previousState);
+
+    return previousState;
+  }
+
+  /**
+   * Redo - move forward to next state
+   */
+  redo(noteId: string): HistoryState | null {
+    const history = this.noteHistories.get(noteId);
+    if (!history || history.future.length === 0) return null;
+
+    // Move present to past
+    history.past.push({ ...history.present });
+
+    // Pop from future
+    const nextState = history.future.pop()!;
+
+    // Set as present
+    history.present = nextState;
+
+    // Emit events
+    this.emit('history-changed', noteId);
+    this.emit('redo-applied', noteId, nextState);
+
+    return nextState;
+  }
+
+  /**
+   * Check if undo is available
+   */
+  canUndo(noteId: string): boolean {
+    const history = this.noteHistories.get(noteId);
+    return history ? history.past.length > 0 : false;
+  }
+
+  /**
+   * Check if redo is available
+   */
+  canRedo(noteId: string): boolean {
+    const history = this.noteHistories.get(noteId);
+    return history ? history.future.length > 0 : false;
+  }
+
+  /**
+   * Clear history for a note (e.g., when deleted)
+   */
+  clearHistory(noteId: string): void {
+    this.noteHistories.delete(noteId);
+    this.emit('history-changed', noteId);
+  }
+
+  /**
    * Cleanup
    */
   destroy(): void {
     this.broadcast.close();
     this.eventListeners.clear();
+    this.noteHistories.clear();
   }
 }

@@ -13,6 +13,18 @@ export interface Note {
   orderIndex?: number;
 }
 
+export interface HistoryState {
+  content: string;
+  title: string;
+  timestamp: number;
+}
+
+export interface NoteHistory {
+  past: HistoryState[];
+  present: HistoryState;
+  future: HistoryState[];
+}
+
 export type BroadcastMessageType = 'note-created' | 'note-updated' | 'note-deleted';
 
 export interface BroadcastMessage {

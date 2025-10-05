@@ -17,6 +17,7 @@ export class Editor {
   private saveTimeout: number | null = null;
   private readonly SAVE_DELAY = 500; // ms
   private isHtmlMode: boolean = false;
+  private isHistoryOperation: boolean = false;
 
   constructor(
     editorElement: HTMLElement,
@@ -73,6 +74,23 @@ export class Editor {
     this.stateManager.on('note-updated', (note: Note) => {
       if (this.currentNote && note.id === this.currentNote.id) {
         this.updateFromExternal(note);
+      }
+    });
+
+    // Listen for undo/redo events
+    this.stateManager.on('undo-applied', (noteId: string, state: any) => {
+      if (this.currentNote && this.currentNote.id === noteId) {
+        this.applyHistoryState(state);
+        this.updateStatus('Undo');
+        setTimeout(() => this.updateStatus(''), 2000);
+      }
+    });
+
+    this.stateManager.on('redo-applied', (noteId: string, state: any) => {
+      if (this.currentNote && this.currentNote.id === noteId) {
+        this.applyHistoryState(state);
+        this.updateStatus('Redo');
+        setTimeout(() => this.updateStatus(''), 2000);
       }
     });
   }
@@ -154,6 +172,11 @@ export class Editor {
       ? this.htmlEditorElement.value
       : this.editorElement.innerHTML;
     const title = this.titleElement.value.trim() || 'Untitled Note';
+
+    // Record history before saving (unless this is a history operation)
+    if (!this.isHistoryOperation) {
+      this.stateManager.recordHistory(this.currentNote.id);
+    }
 
     this.stateManager.updateNote(this.currentNote.id, { content, title });
     this.updateStatus('Saved');
@@ -277,6 +300,54 @@ export class Editor {
    */
   private updateStatus(text: string): void {
     this.statusElement.textContent = text;
+  }
+
+  /**
+   * Handle undo action
+   */
+  private handleUndo(): void {
+    if (!this.currentNote) return;
+    this.stateManager.undo(this.currentNote.id);
+  }
+
+  /**
+   * Handle redo action
+   */
+  private handleRedo(): void {
+    if (!this.currentNote) return;
+    this.stateManager.redo(this.currentNote.id);
+  }
+
+  /**
+   * Apply a history state to the editor
+   */
+  private applyHistoryState(state: { content: string; title: string }): void {
+    if (!this.currentNote) return;
+
+    // Set flag to prevent history recording
+    this.isHistoryOperation = true;
+
+    // Save cursor position
+    const selection = this.saveCursorPosition();
+
+    // Update UI
+    this.titleElement.value = state.title;
+    this.editorElement.innerHTML = state.content;
+    this.htmlEditorElement.value = state.content;
+
+    // Restore cursor position
+    if (selection) {
+      this.restoreCursorPosition(selection);
+    }
+
+    // Update note in storage
+    this.stateManager.updateNote(this.currentNote.id, {
+      content: state.content,
+      title: state.title
+    });
+
+    // Reset flag
+    this.isHistoryOperation = false;
   }
 
   /**
