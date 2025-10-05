@@ -71,8 +71,24 @@
               <button class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)">
                 <em>I</em>
               </button>
+              <button class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)">
+                <u>U</u>
+              </button>
+              <button class="toolbar-btn" data-command="strikethrough" title="Strikethrough">
+                <s>S</s>
+              </button>
+              <button class="toolbar-btn" data-command="code" title="Code">
+                <span style="font-family: monospace;">&lt;/&gt;</span>
+              </button>
               <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">
-                ≡
+                • List
+              </button>
+              <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">
+                1. List
+              </button>
+              <span class="toolbar-divider"></span>
+              <button id="html-toggle-btn" class="toolbar-btn" title="Toggle HTML View">
+                &lt;HTML&gt;
               </button>
             </div>
             <div class="editor-status">
@@ -88,6 +104,14 @@
             spellcheck="true"
           >
           </div>
+
+          <textarea
+            id="html-editor"
+            class="html-editor"
+            spellcheck="false"
+            placeholder="Enter custom HTML..."
+            style="display: none;"
+          ></textarea>
 
           <div class="editor-footer">
             <button id="save-note-btn" class="btn btn-primary save-btn">

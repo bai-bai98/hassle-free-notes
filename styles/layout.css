@@ -203,6 +203,32 @@ body {
   pointer-events: none;
 }
 
+/* HTML Editor */
+.html-editor {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  overflow-x: hidden;
+  outline: none;
+  word-wrap: break-word;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  resize: none;
+  white-space: pre-wrap;
+}
+
+.html-editor:focus {
+  outline: none;
+}
+
+.html-editor::placeholder {
+  color: var(--text-tertiary);
+}
+
 /* Empty state */
 .empty-state {
   display: none;

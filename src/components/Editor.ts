@@ -8,6 +8,8 @@ import { StateManager } from '../core/state.js';
 
 export class Editor {
   private editorElement: HTMLElement;
+  private htmlEditorElement: HTMLTextAreaElement;
+  private htmlToggleButton: HTMLButtonElement;
   private titleElement: HTMLInputElement;
   private statusElement: HTMLElement;
   private saveButton: HTMLButtonElement;
@@ -15,6 +17,7 @@ export class Editor {
   private currentNote: Note | null = null;
   private saveTimeout: number | null = null;
   private readonly SAVE_DELAY = 500; // ms
+  private isHtmlMode: boolean = false;
 
   constructor(
     editorElement: HTMLElement,
@@ -29,6 +32,10 @@ export class Editor {
     this.saveButton = saveButton;
     this.stateManager = stateManager;
 
+    // Get HTML editor elements
+    this.htmlEditorElement = document.getElementById('html-editor') as HTMLTextAreaElement;
+    this.htmlToggleButton = document.getElementById('html-toggle-btn') as HTMLButtonElement;
+
     this.setupEventListeners();
   }
 
@@ -38,6 +45,9 @@ export class Editor {
   private setupEventListeners(): void {
     // Handle input with debounced auto-save
     this.editorElement.addEventListener('input', () => this.handleInput());
+
+    // Handle HTML editor input with debounced auto-save
+    this.htmlEditorElement.addEventListener('input', () => this.handleInput());
 
     // Handle title input with debounced auto-save
     this.titleElement.addEventListener('input', () => this.handleInput());
@@ -50,6 +60,9 @@ export class Editor {
 
     // Handle keyboard shortcuts
     this.editorElement.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+    // Handle HTML toggle button
+    this.htmlToggleButton.addEventListener('click', () => this.toggleHtmlMode());
 
     // Handle save button click
     this.saveButton.addEventListener('click', () => {
@@ -136,12 +149,38 @@ export class Editor {
   }
 
   /**
+   * Toggle between visual and HTML edit modes
+   */
+  private toggleHtmlMode(): void {
+    this.isHtmlMode = !this.isHtmlMode;
+
+    if (this.isHtmlMode) {
+      // Switching to HTML mode
+      // Sync content from visual editor to HTML editor
+      this.htmlEditorElement.value = this.editorElement.innerHTML;
+      this.editorElement.style.display = 'none';
+      this.htmlEditorElement.style.display = 'block';
+      this.htmlToggleButton.classList.add('active');
+    } else {
+      // Switching to visual mode
+      // Sync content from HTML editor to visual editor
+      this.editorElement.innerHTML = this.htmlEditorElement.value;
+      this.htmlEditorElement.style.display = 'none';
+      this.editorElement.style.display = 'block';
+      this.htmlToggleButton.classList.remove('active');
+    }
+  }
+
+  /**
    * Save the current note
    */
   private saveNote(): void {
     if (!this.currentNote) return;
 
-    const content = this.editorElement.innerHTML;
+    // Get content from the active editor
+    const content = this.isHtmlMode
+      ? this.htmlEditorElement.value
+      : this.editorElement.innerHTML;
     const title = this.titleElement.value.trim() || 'Untitled Note';
 
     this.stateManager.updateNote(this.currentNote.id, { content, title });
@@ -164,6 +203,7 @@ export class Editor {
       // Load title and content
       this.titleElement.value = note.title;
       this.editorElement.innerHTML = note.content || '';
+      this.htmlEditorElement.value = note.content || '';
 
       // Restore cursor if this is an update, not initial load
       if (selection && this.editorElement.innerHTML === note.content) {
@@ -174,6 +214,7 @@ export class Editor {
     } else {
       this.titleElement.value = '';
       this.editorElement.innerHTML = '';
+      this.htmlEditorElement.value = '';
       this.updateStatus('');
     }
   }

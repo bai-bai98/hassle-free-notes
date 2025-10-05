@@ -86,22 +86,25 @@
 .toolbar {
   display: flex;
   gap: var(--spacing-xs);
+  align-items: center;
 }
 
 .toolbar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  min-width: 32px;
   height: 32px;
+  padding: 0 var(--spacing-xs);
   background-color: var(--bg-tertiary);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .toolbar-btn:hover {
@@ -117,6 +120,13 @@
 .toolbar-btn:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+  margin: 0 var(--spacing-xs);
 }
 
 /* Note title input */
@@ -369,6 +379,25 @@
 .editor em,
 .editor i {
   font-style: italic;
+}
+
+.editor u {
+  text-decoration: underline;
+}
+
+.editor s,
+.editor strike,
+.editor del {
+  text-decoration: line-through;
+}
+
+.editor code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: rgba(128, 128, 128, 0.15);
+  border: 1px solid rgba(128, 128, 128, 0.2);
 }
 
 .editor ul,
