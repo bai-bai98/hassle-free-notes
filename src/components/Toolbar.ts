@@ -120,19 +120,19 @@ export class Toolbar {
         }
 
         if (formatNode) {
-          // Insert a non-breaking space after the format tag and move cursor there
-          const nbsp = document.createTextNode('\u00A0'); // &nbsp;
+          // Insert a zero-width space after the format tag and move cursor there
+          const zeroWidthSpace = document.createTextNode('\u200B'); // &#8203;
 
-          // Insert the nbsp after the format node
+          // Insert the zero-width space after the format node
           if (formatNode.nextSibling) {
-            formatNode.parentNode!.insertBefore(nbsp, formatNode.nextSibling);
+            formatNode.parentNode!.insertBefore(zeroWidthSpace, formatNode.nextSibling);
           } else {
-            formatNode.parentNode!.appendChild(nbsp);
+            formatNode.parentNode!.appendChild(zeroWidthSpace);
           }
 
-          // Move cursor after the nbsp
+          // Move cursor after the zero-width space
           const newRange = document.createRange();
-          newRange.setStartAfter(nbsp);
+          newRange.setStartAfter(zeroWidthSpace);
           newRange.collapse(true);
           selection.removeAllRanges();
           selection.addRange(newRange);
@@ -217,21 +217,21 @@ export class Toolbar {
           // Replace the format node
           parent.replaceChild(fragment, formatNode);
 
-          // Add nbsp after the unformatted content and position cursor there
+          // Add zero-width space after the unformatted content and position cursor there
           if (selectedContent.childNodes.length > 0) {
             const lastNode = selectedContent.childNodes[selectedContent.childNodes.length - 1];
-            const nbsp = document.createTextNode('\u00A0'); // &nbsp;
+            const zeroWidthSpace = document.createTextNode('\u200B'); // &#8203;
 
-            // Insert nbsp after the last node of selected content
+            // Insert zero-width space after the last node of selected content
             if (lastNode.nextSibling) {
-              lastNode.parentNode!.insertBefore(nbsp, lastNode.nextSibling);
+              lastNode.parentNode!.insertBefore(zeroWidthSpace, lastNode.nextSibling);
             } else {
-              lastNode.parentNode!.appendChild(nbsp);
+              lastNode.parentNode!.appendChild(zeroWidthSpace);
             }
 
-            // Position cursor after the nbsp
+            // Position cursor after the zero-width space
             const newRange = document.createRange();
-            newRange.setStartAfter(nbsp);
+            newRange.setStartAfter(zeroWidthSpace);
             newRange.collapse(true);
             selection.removeAllRanges();
             selection.addRange(newRange);
@@ -243,18 +243,18 @@ export class Toolbar {
         wrapper.appendChild(range.extractContents());
         range.insertNode(wrapper);
 
-        // Insert nbsp after the formatted content
-        const nbsp = document.createTextNode('\u00A0'); // &nbsp;
+        // Insert zero-width space after the formatted content
+        const zeroWidthSpace = document.createTextNode('\u200B'); // &#8203;
         if (wrapper.nextSibling) {
-          wrapper.parentNode!.insertBefore(nbsp, wrapper.nextSibling);
+          wrapper.parentNode!.insertBefore(zeroWidthSpace, wrapper.nextSibling);
         } else {
-          wrapper.parentNode!.appendChild(nbsp);
+          wrapper.parentNode!.appendChild(zeroWidthSpace);
         }
 
-        // Position cursor after the nbsp
+        // Position cursor after the zero-width space
         selection.removeAllRanges();
         const newRange = document.createRange();
-        newRange.setStartAfter(nbsp);
+        newRange.setStartAfter(zeroWidthSpace);
         newRange.collapse(true);
         selection.addRange(newRange);
       }
