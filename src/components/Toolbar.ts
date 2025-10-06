@@ -3,8 +3,8 @@
  * Supports bold, italic, and bullet lists
  */
 
-import { StateManager } from '../core/state.js';
-import { debounce } from '../utils/debounce.js';
+import {StateManager} from '../core/state.js';
+import {debounce} from '../utils/debounce.js';
 
 export class Toolbar {
   private toolbarElement: HTMLElement;
@@ -40,6 +40,13 @@ export class Toolbar {
     this.debouncedUpdateButtonStates = debounce(() => this.updateButtonStates(), 50);
 
     this.setupEventListeners();
+  }
+
+  /**
+   * Cleanup - remove event listeners
+   */
+  destroy(): void {
+    this.abortController.abort();
   }
 
   /**
@@ -109,14 +116,14 @@ export class Toolbar {
     document.addEventListener('click', () => {
       this.closeDropdown(this.fontSizeMenu);
       this.closeDropdown(this.textColorMenu);
-    }, { signal: this.abortController.signal });
+    }, {signal: this.abortController.signal});
 
     // Update button states on selection change (debounced)
     document.addEventListener('selectionchange', () => {
       if (document.activeElement === this.editorElement) {
         this.debouncedUpdateButtonStates();
       }
-    }, { signal: this.abortController.signal });
+    }, {signal: this.abortController.signal});
 
     // Handle undo/redo buttons
     this.undoBtn.addEventListener('click', () => this.handleUndo());
@@ -750,12 +757,5 @@ export class Toolbar {
 
     this.undoBtn.disabled = !this.stateManager.canUndo(this.currentNoteId);
     this.redoBtn.disabled = !this.stateManager.canRedo(this.currentNoteId);
-  }
-
-  /**
-   * Cleanup - remove event listeners
-   */
-  destroy(): void {
-    this.abortController.abort();
   }
 }

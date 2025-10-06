@@ -4,10 +4,9 @@
  * Optimized with note-level keys and in-memory cache
  */
 
-import { Note } from '../types.js';
-import { toast } from '../components/Toast.js';
-import { STORAGE_KEYS } from '../constants.js';
-import { perfMonitor } from '../utils/performance.js';
+import {Note} from '../types.js';
+import {toast} from '../components/Toast.js';
+import {STORAGE_KEYS} from '../constants.js';
 
 const STORAGE_KEY = STORAGE_KEYS.NOTES;
 const NOTE_KEY_PREFIX = STORAGE_KEYS.NOTE_PREFIX;
@@ -21,14 +20,11 @@ export class StorageService {
    * Get all notes from storage
    */
   getAllNotes(): Note[] {
-    return perfMonitor.measure('storage-getAllNotes', () => {
-      // Return from cache if already loaded
-      if (this.cacheLoaded) {
-        return Array.from(this.cache.values());
-      }
+    if (this.cacheLoaded) {
+      return Array.from(this.cache.values());
+    }
 
-      try {
-      // Try new index-based storage first
+    try {
       const index = this.getIndex();
       if (index.length > 0) {
         const notes: Note[] = [];
@@ -61,14 +57,13 @@ export class StorageService {
         }
       }
 
-        this.cacheLoaded = true;
-        return [];
-      } catch (error) {
-        console.error('Error loading notes:', error);
-        this.cacheLoaded = true;
-        return [];
-      }
-    });
+      this.cacheLoaded = true;
+      return [];
+    } catch (error) {
+      console.error('Error loading notes:', error);
+      this.cacheLoaded = true;
+      return [];
+    }
   }
 
   /**
@@ -88,26 +83,23 @@ export class StorageService {
    * Save a note (create or update)
    */
   saveNote(note: Note): boolean {
-    return perfMonitor.measure('storage-saveNote', () => {
-      try {
-        // Update cache
-        const isNew = !this.cache.has(note.id);
-        this.cache.set(note.id, note);
+    try {
+      // Update cache
+      const isNew = !this.cache.has(note.id);
+      this.cache.set(note.id, note);
 
-        // Save to storage
-        this.saveNoteToStorage(note);
+      // Save to storage
+      this.saveNoteToStorage(note);
 
-        // Update index if new note
-        if (isNew) {
-          const index = this.getIndex();
-          index.push(note.id);
-          this.saveIndex(index);
-        }
+      // Update index if new note
+      if (isNew) {
+        const index = this.getIndex();
+        index.push(note.id);
+        this.saveIndex(index);
+      }
 
-        // Check performance threshold
-        perfMonitor.checkThreshold('storage-saveNote', 100);
 
-        return true;
+      return true;
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         console.error('Storage quota exceeded');
@@ -117,8 +109,8 @@ export class StorageService {
         toast.error('Failed to save note. Please try again.', 3000);
       }
       return false;
-      }
-    });
+    }
+
   }
 
   /**
@@ -145,34 +137,6 @@ export class StorageService {
   }
 
   /**
-   * Clear all notes (for testing/debugging)
-   */
-  clearAll(): boolean {
-    try {
-      // Clear cache
-      this.cache.clear();
-      this.cacheLoaded = false;
-
-      // Clear index
-      localStorage.removeItem(INDEX_KEY);
-
-      // Clear all note entries
-      const index = this.getIndex();
-      index.forEach(id => {
-        localStorage.removeItem(NOTE_KEY_PREFIX + id);
-      });
-
-      // Clear legacy format
-      localStorage.removeItem(STORAGE_KEY);
-
-      return true;
-    } catch (error) {
-      console.error('Error clearing notes:', error);
-      return false;
-    }
-  }
-
-  /**
    * Load a single note from storage
    */
   private loadNoteFromStorage(id: string): Note | null {
@@ -180,8 +144,7 @@ export class StorageService {
       const data = localStorage.getItem(NOTE_KEY_PREFIX + id);
       if (!data) return null;
 
-      const note = JSON.parse(data);
-      return note;
+      return JSON.parse(data);
     } catch (error) {
       console.error(`Error loading note ${id}:`, error);
       return null;

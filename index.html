@@ -1,175 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hassle Free Notes</title>
-  <link rel="stylesheet" href="styles/variables.css">
-  <link rel="stylesheet" href="styles/layout.css">
-  <link rel="stylesheet" href="styles/components.css">
-  <link rel="stylesheet" href="styles/themes.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hassle Free Notes</title>
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/themes.css">
 </head>
 <body data-theme="dark">
-  <div id="app" role="application" aria-label="Hassle Free Notes Application">
+<div id="app" role="application" aria-label="Hassle Free Notes Application">
     <header class="app-header" role="banner">
-      <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
-        <span class="hamburger-icon" aria-hidden="true">☰</span>
-      </button>
-      <h1 class="app-title">Hassle Free Notes</h1>
-      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
-        <span class="theme-icon" aria-hidden="true">🌙</span>
-      </button>
+        <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+            <span class="hamburger-icon" aria-hidden="true">☰</span>
+        </button>
+        <h1 class="app-title">Hassle Free Notes</h1>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+            <span class="theme-icon" aria-hidden="true">🌙</span>
+        </button>
     </header>
 
     <main class="app-main" role="main">
-      <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
-      <aside id="notes-sidebar" class="notes-sidebar" role="complementary" aria-label="Notes sidebar">
-        <div class="sidebar-header">
-          <button id="new-note-btn" class="btn btn-primary" aria-label="Create new note">+ New Note</button>
-        </div>
-
-        <div class="sidebar-controls">
-          <div class="search-container">
-            <input
-              type="text"
-              id="notes-search"
-              class="search-input"
-              placeholder="Search notes..."
-              autocomplete="off"
-              aria-label="Search notes"
-              role="searchbox"
-            />
-            <span class="search-icon" aria-hidden="true">🔍</span>
-          </div>
-
-          <button id="view-toggle" class="view-toggle" title="Toggle view mode" aria-label="Toggle between list and grouped view">
-            <span class="view-icon" aria-hidden="true">📑</span>
-            <span class="view-label">Group by Site</span>
-          </button>
-        </div>
-
-        <div id="notes-list" class="notes-list" role="list" aria-label="Notes list">
-          <!-- Notes list will be rendered here -->
-        </div>
-      </aside>
-
-      <section class="editor-container">
-        <div id="editor-section" class="editor-section">
-          <div class="note-title-container">
-            <input
-              type="text"
-              id="note-title-input"
-              class="note-title-input"
-              placeholder="Untitled Note"
-              spellcheck="false"
-            />
-          </div>
-
-          <div class="editor-header">
-            <div id="toolbar" class="toolbar">
-              <button class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)">
-                <strong>B</strong>
-              </button>
-              <button class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)">
-                <em>I</em>
-              </button>
-              <button class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)">
-                <u>U</u>
-              </button>
-              <button class="toolbar-btn" data-command="strikethrough" title="Strikethrough">
-                <s>S</s>
-              </button>
-              <button class="toolbar-btn" data-command="code" title="Code">
-                <span style="font-family: monospace;">&lt;/&gt;</span>
-              </button>
-              <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">
-                •
-              </button>
-              <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">
-                1.
-              </button>
-              <span class="toolbar-divider"></span>
-              <div class="toolbar-dropdown">
-                <button class="toolbar-btn dropdown-toggle" id="font-size-btn" title="Font Size">
-                  A▾
-                </button>
-                <div class="dropdown-menu" id="font-size-menu">
-                  <button class="dropdown-item" data-size="12px">Small</button>
-                  <button class="dropdown-item" data-size="16px">Normal</button>
-                  <button class="dropdown-item" data-size="20px">Large</button>
-                  <button class="dropdown-item" data-size="24px">Huge</button>
-                </div>
-              </div>
-              <div class="toolbar-dropdown">
-                <button class="toolbar-btn dropdown-toggle" id="text-color-btn" title="Text Color">
-                  <span style="border-bottom: 3px solid currentColor;">A</span>
-                </button>
-                <div class="dropdown-menu color-picker-menu" id="text-color-menu">
-                  <div class="color-presets">
-                    <button class="color-preset" data-color="#ffffff" style="background: #ffffff; border: 2px solid #333;" title="White"></button>
-                    <button class="color-preset" data-color="#000000" style="background: #000000;" title="Black"></button>
-                    <button class="color-preset" data-color="#e74c3c" style="background: #e74c3c;" title="Red"></button>
-                    <button class="color-preset" data-color="#3498db" style="background: #3498db;" title="Blue"></button>
-                    <button class="color-preset" data-color="#2ecc71" style="background: #2ecc71;" title="Green"></button>
-                    <button class="color-preset" data-color="#f39c12" style="background: #f39c12;" title="Orange"></button>
-                    <button class="color-preset" data-color="#9b59b6" style="background: #9b59b6;" title="Purple"></button>
-                    <button class="color-preset" data-color="#95a5a6" style="background: #95a5a6;" title="Gray"></button>
-                  </div>
-                </div>
-              </div>
-              <span class="toolbar-divider"></span>
-              <button id="undo-btn" class="toolbar-btn" title="Undo (Ctrl+Z)" disabled>
-                ↶
-              </button>
-              <button id="redo-btn" class="toolbar-btn" title="Redo (Ctrl+Y)" disabled>
-                ↷
-              </button>
+        <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+        <aside id="notes-sidebar" class="notes-sidebar" role="complementary" aria-label="Notes sidebar">
+            <div class="sidebar-header">
+                <button id="new-note-btn" class="btn btn-primary" aria-label="Create new note">+ New Note</button>
             </div>
-            <div class="editor-status">
-              <span id="last-saved" class="last-saved"></span>
+
+            <div class="sidebar-controls">
+                <div class="search-container">
+                    <input
+                            type="text"
+                            id="notes-search"
+                            class="search-input"
+                            placeholder="Search notes..."
+                            autocomplete="off"
+                            aria-label="Search notes"
+                            role="searchbox"
+                    />
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                </div>
+
+                <button id="view-toggle" class="view-toggle" title="Toggle view mode"
+                        aria-label="Toggle between list and grouped view">
+                    <span class="view-icon" aria-hidden="true">📑</span>
+                    <span class="view-label">Group by Site</span>
+                </button>
             </div>
-          </div>
 
-          <div
-            id="editor"
-            class="editor"
-            contenteditable="true"
-            data-placeholder="Start typing your note..."
-            spellcheck="true"
-            role="textbox"
-            aria-multiline="true"
-            aria-label="Note content editor"
-          >
-          </div>
+            <div id="notes-list" class="notes-list" role="list" aria-label="Notes list">
+                <!-- Notes list will be rendered here -->
+            </div>
+        </aside>
 
-          <textarea
-            id="html-editor"
-            class="html-editor"
-            spellcheck="false"
-            placeholder="Enter custom HTML..."
-            style="display: none;"
-          ></textarea>
+        <section class="editor-container">
+            <div id="editor-section" class="editor-section">
+                <div class="note-title-container">
+                    <input
+                            type="text"
+                            id="note-title-input"
+                            class="note-title-input"
+                            placeholder="Untitled Note"
+                            spellcheck="false"
+                    />
+                </div>
 
-          <div class="editor-footer">
-            <button id="save-note-btn" class="btn btn-primary save-btn">
-              Save Note
-            </button>
-          </div>
-        </div>
+                <div class="editor-header">
+                    <div id="toolbar" class="toolbar">
+                        <button class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)">
+                            <strong>B</strong>
+                        </button>
+                        <button class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)">
+                            <em>I</em>
+                        </button>
+                        <button class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)">
+                            <u>U</u>
+                        </button>
+                        <button class="toolbar-btn" data-command="strikethrough" title="Strikethrough">
+                            <s>S</s>
+                        </button>
+                        <button class="toolbar-btn" data-command="code" title="Code">
+                            <span style="font-family: monospace;">&lt;/&gt;</span>
+                        </button>
+                        <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">
+                            •
+                        </button>
+                        <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">
+                            1.
+                        </button>
+                        <span class="toolbar-divider"></span>
+                        <div class="toolbar-dropdown">
+                            <button class="toolbar-btn dropdown-toggle" id="font-size-btn" title="Font Size">
+                                A▾
+                            </button>
+                            <div class="dropdown-menu" id="font-size-menu">
+                                <button class="dropdown-item" data-size="12px">Small</button>
+                                <button class="dropdown-item" data-size="16px">Normal</button>
+                                <button class="dropdown-item" data-size="20px">Large</button>
+                                <button class="dropdown-item" data-size="24px">Huge</button>
+                            </div>
+                        </div>
+                        <div class="toolbar-dropdown">
+                            <button class="toolbar-btn dropdown-toggle" id="text-color-btn" title="Text Color">
+                                <span style="border-bottom: 3px solid currentColor;">A</span>
+                            </button>
+                            <div class="dropdown-menu color-picker-menu" id="text-color-menu">
+                                <div class="color-presets">
+                                    <button class="color-preset" data-color="#ffffff"
+                                            style="background: #ffffff; border: 2px solid #333;" title="White"></button>
+                                    <button class="color-preset" data-color="#000000" style="background: #000000;"
+                                            title="Black"></button>
+                                    <button class="color-preset" data-color="#e74c3c" style="background: #e74c3c;"
+                                            title="Red"></button>
+                                    <button class="color-preset" data-color="#3498db" style="background: #3498db;"
+                                            title="Blue"></button>
+                                    <button class="color-preset" data-color="#2ecc71" style="background: #2ecc71;"
+                                            title="Green"></button>
+                                    <button class="color-preset" data-color="#f39c12" style="background: #f39c12;"
+                                            title="Orange"></button>
+                                    <button class="color-preset" data-color="#9b59b6" style="background: #9b59b6;"
+                                            title="Purple"></button>
+                                    <button class="color-preset" data-color="#95a5a6" style="background: #95a5a6;"
+                                            title="Gray"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="toolbar-divider"></span>
+                        <button id="undo-btn" class="toolbar-btn" title="Undo (Ctrl+Z)" disabled>
+                            ↶
+                        </button>
+                        <button id="redo-btn" class="toolbar-btn" title="Redo (Ctrl+Y)" disabled>
+                            ↷
+                        </button>
+                    </div>
+                    <div class="editor-status">
+                        <span id="last-saved" class="last-saved"></span>
+                    </div>
+                </div>
 
-        <div id="empty-state" class="empty-state">
-          <div class="empty-state-content">
-            <h2>No note selected</h2>
-            <p>Create a new note or select an existing one from the sidebar</p>
-            <button id="empty-state-new-note-btn" class="btn btn-primary" style="margin-top: 24px; max-width: 200px;">
-              + New Note
-            </button>
-          </div>
-        </div>
-      </section>
+                <div
+                        id="editor"
+                        class="editor"
+                        contenteditable="true"
+                        data-placeholder="Start typing your note..."
+                        spellcheck="true"
+                        role="textbox"
+                        aria-multiline="true"
+                        aria-label="Note content editor"
+                >
+                </div>
+
+                <textarea
+                        id="html-editor"
+                        class="html-editor"
+                        spellcheck="false"
+                        placeholder="Enter custom HTML..."
+                        style="display: none;"
+                ></textarea>
+
+                <div class="editor-footer">
+                    <button id="save-note-btn" class="btn btn-primary save-btn">
+                        Save Note
+                    </button>
+                </div>
+            </div>
+
+            <div id="empty-state" class="empty-state">
+                <div class="empty-state-content">
+                    <h2>No note selected</h2>
+                    <p>Create a new note or select an existing one from the sidebar</p>
+                    <button id="empty-state-new-note-btn" class="btn btn-primary"
+                            style="margin-top: 24px; max-width: 200px;">
+                        + New Note
+                    </button>
+                </div>
+            </div>
+        </section>
     </main>
-  </div>
+</div>
 
-  <script type="module" src="dist/main.js"></script>
+<script type="module" src="dist/main.js"></script>
 </body>
 </html>

@@ -4,55 +4,45 @@
 
 /* Smooth theme transitions - optimized */
 body {
-  transition: background-color var(--transition-normal) ease, color var(--transition-normal) ease;
+    transition: background-color var(--transition-normal) ease, color var(--transition-normal) ease;
 }
 
 .app-header,
 .notes-sidebar,
 .editor-header {
-  transition: background-color var(--transition-normal) ease, border-color var(--transition-normal) ease;
+    transition: background-color var(--transition-normal) ease, border-color var(--transition-normal) ease;
 }
 
 .note-item,
 .btn,
 .toolbar-btn {
-  transition: background-color var(--transition-fast) ease;
-}
-
-/* Dark theme specific adjustments */
-[data-theme="dark"] {
-  /* Already defined in variables.css */
-}
-
-/* Light theme specific adjustments */
-[data-theme="light"] {
-  /* Already defined in variables.css */
+    transition: background-color var(--transition-fast) ease;
 }
 
 /* Selection colors */
 ::selection {
-  background-color: var(--accent-color);
-  color: white;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 ::-moz-selection {
-  background-color: var(--accent-color);
-  color: white;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 /* Focus styles for accessibility */
 *:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

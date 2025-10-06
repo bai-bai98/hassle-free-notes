@@ -4,9 +4,9 @@
  * Includes error recovery and fallback mechanisms
  */
 
-import { BroadcastMessage } from '../types.js';
-import { BROADCAST } from '../constants.js';
-import { toast } from '../components/Toast.js';
+import {BroadcastMessage} from '../types.js';
+import {BROADCAST} from '../constants.js';
+import {toast} from '../components/Toast.js';
 
 const CHANNEL_NAME = BROADCAST.CHANNEL_NAME;
 const MAX_RETRY_ATTEMPTS = 3;
@@ -20,41 +20,6 @@ export class BroadcastService {
 
   constructor() {
     this.initialize();
-  }
-
-  /**
-   * Initialize the BroadcastChannel with error recovery
-   */
-  private initialize(): void {
-    try {
-      if (typeof BroadcastChannel !== 'undefined') {
-        this.channel = new BroadcastChannel(CHANNEL_NAME);
-        this.channel.onmessage = (event) => {
-          this.handleMessage(event.data);
-        };
-        // Note: BroadcastChannel doesn't have onerror in the standard API
-        // Error handling is done in the broadcast() method instead
-        this.retryCount = 0; // Reset on successful init
-      } else {
-        console.warn('BroadcastChannel API not supported');
-      }
-    } catch (error) {
-      console.error('Error initializing BroadcastChannel:', error);
-      this.handleChannelError();
-    }
-  }
-
-  /**
-   * Handle incoming messages
-   */
-  private handleMessage(data: BroadcastMessage): void {
-    this.messageHandlers.forEach(handler => {
-      try {
-        handler(data);
-      } catch (error) {
-        console.error('Error in message handler:', error);
-      }
-    });
   }
 
   /**
@@ -86,6 +51,62 @@ export class BroadcastService {
       console.error('Error broadcasting message:', error);
       this.retryBroadcast(message, 1);
     }
+  }
+
+  /**
+   * Close the channel
+   */
+  close(): void {
+    if (this.reconnectTimeout !== null) {
+      window.clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
+    if (this.channel) {
+      this.channel.close();
+      this.channel = null;
+    }
+    this.messageHandlers.clear();
+  }
+
+  /**
+   * Check if BroadcastChannel is supported
+   */
+  isSupported(): boolean {
+    return typeof BroadcastChannel !== 'undefined';
+  }
+
+  /**
+   * Initialize the BroadcastChannel with error recovery
+   */
+  private initialize(): void {
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        this.channel = new BroadcastChannel(CHANNEL_NAME);
+        this.channel.onmessage = (event) => {
+          this.handleMessage(event.data);
+        };
+        this.retryCount = 0;
+      } else {
+        console.warn('BroadcastChannel API not supported');
+      }
+    } catch (error) {
+      console.error('Error initializing BroadcastChannel:', error);
+      this.handleChannelError();
+    }
+  }
+
+  /**
+   * Handle incoming messages
+   */
+  private handleMessage(data: BroadcastMessage): void {
+    this.messageHandlers.forEach(handler => {
+      try {
+        handler(data);
+      } catch (error) {
+        console.error('Error in message handler:', error);
+      }
+    });
   }
 
   /**
@@ -133,28 +154,5 @@ export class BroadcastService {
       this.close();
       this.initialize();
     }, delay);
-  }
-
-  /**
-   * Close the channel
-   */
-  close(): void {
-    if (this.reconnectTimeout !== null) {
-      window.clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-
-    if (this.channel) {
-      this.channel.close();
-      this.channel = null;
-    }
-    this.messageHandlers.clear();
-  }
-
-  /**
-   * Check if BroadcastChannel is supported
-   */
-  isSupported(): boolean {
-    return typeof BroadcastChannel !== 'undefined';
   }
 }

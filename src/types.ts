@@ -2,6 +2,7 @@
  * Core data models for the note-taking application
  */
 
+//#region Interfaces
 export interface Note {
   id: string;
   title: string;
@@ -25,18 +26,36 @@ export interface NoteHistory {
   future: HistoryState[];
 }
 
-export type BroadcastMessageType = 'note-created' | 'note-updated' | 'note-deleted';
-
 export interface BroadcastMessage {
   type: BroadcastMessageType;
   noteId: string;
   note?: Note;
 }
 
+export interface ToastOptions {
+  message: string;
+  type?: ToastType;
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+export interface SiteInfo {
+  url: string;
+  siteName: string;
+  hostname: string;
+}
+
+//endregion
+
+//#region Types
+
+export type BroadcastMessageType = 'note-created' | 'note-updated' | 'note-deleted';
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
 export type EventCallback = (...args: any[]) => void;
 
-export interface EventEmitter {
-  on(event: string, callback: EventCallback): void;
-  off(event: string, callback: EventCallback): void;
-  emit(event: string, ...args: any[]): void;
-}
+//endregion

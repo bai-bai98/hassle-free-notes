@@ -3,12 +3,12 @@
  * Coordinates storage, broadcast, and UI updates
  */
 
-import { Note, BroadcastMessage, EventCallback, NoteHistory, HistoryState } from '../types.js';
-import { StorageService } from './storage.js';
-import { BroadcastService } from './broadcast.js';
-import { getCurrentSiteInfo } from '../utils/url.js';
-import { debounce } from '../utils/debounce.js';
-import { HISTORY } from '../constants.js';
+import {BroadcastMessage, EventCallback, HistoryState, Note, NoteHistory} from '../types.js';
+import {StorageService} from './storage.js';
+import {BroadcastService} from './broadcast.js';
+import {getCurrentSiteInfo} from '../utils/url.js';
+import {debounce} from '../utils/debounce.js';
+import {HISTORY} from '../constants.js';
 
 export class StateManager {
   private storage: StorageService;
@@ -56,64 +56,11 @@ export class StateManager {
   }
 
   /**
-   * Event emitter - Emit event
-   */
-  private emit(event: string, ...args: any[]): void {
-    const listeners = this.eventListeners.get(event);
-    if (listeners) {
-      listeners.forEach(callback => {
-        try {
-          callback(...args);
-        } catch (error) {
-          console.error(`Error in event listener for ${event}:`, error);
-        }
-      });
-    }
-  }
-
-  /**
-   * Load notes from storage
-   */
-  private loadNotes(): void {
-    const notes = this.storage.getAllNotes();
-    this.notes.clear();
-    notes.forEach(note => this.notes.set(note.id, note));
-    this.emit('notes-loaded', this.getNotesArray());
-  }
-
-  /**
-   * Handle broadcast messages from other tabs
-   */
-  private handleBroadcastMessage(message: BroadcastMessage): void {
-    switch (message.type) {
-      case 'note-created':
-      case 'note-updated':
-        if (message.note) {
-          this.notes.set(message.note.id, message.note);
-          this.emit('note-changed', message.note);
-        }
-        break;
-
-      case 'note-deleted':
-        this.notes.delete(message.noteId);
-        this.emit('note-deleted', message.noteId);
-
-        // If the deleted note was the current one, clear selection
-        if (this.currentNoteId === message.noteId) {
-          this.currentNoteId = null;
-          this.emit('note-selected', null);
-        }
-        break;
-    }
-  }
-
-  /**
    * Create a new note
    */
   async createNote(): Promise<Note> {
     const now = Date.now();
 
-    // Get current site info
     const siteInfo = await getCurrentSiteInfo();
 
     const note: Note = {
@@ -123,14 +70,13 @@ export class StateManager {
       url: siteInfo?.url,
       siteName: siteInfo?.siteName,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     if (this.storage.saveNote(note)) {
       this.notes.set(note.id, note);
-      // Initialize empty history for new note
       this.initializeHistory(note);
-      this.broadcast.broadcast({ type: 'note-created', noteId: note.id, note });
+      this.broadcast.broadcast({type: 'note-created', noteId: note.id, note});
       this.emit('note-created', note);
       return note;
     }
@@ -148,13 +94,13 @@ export class StateManager {
     const updatedNote: Note = {
       ...existingNote,
       ...updates,
-      id, // Ensure ID doesn't change
-      updatedAt: Date.now()
+      id,
+      updatedAt: Date.now(),
     };
 
     if (this.storage.saveNote(updatedNote)) {
       this.notes.set(id, updatedNote);
-      this.broadcast.broadcast({ type: 'note-updated', noteId: id, note: updatedNote });
+      this.broadcast.broadcast({type: 'note-updated', noteId: id, note: updatedNote});
       this.emit('note-updated', updatedNote);
       return true;
     }
@@ -170,12 +116,10 @@ export class StateManager {
 
     if (this.storage.deleteNote(id)) {
       this.notes.delete(id);
-      // Clear history for deleted note
       this.clearHistory(id);
-      this.broadcast.broadcast({ type: 'note-deleted', noteId: id });
+      this.broadcast.broadcast({type: 'note-deleted', noteId: id});
       this.emit('note-deleted', id);
 
-      // If deleted note was current, clear selection
       if (this.currentNoteId === id) {
         this.currentNoteId = null;
         this.emit('note-selected', null);
@@ -197,18 +141,10 @@ export class StateManager {
   }
 
   /**
-   * Get current note
-   */
-  getCurrentNote(): Note | null {
-    return this.currentNoteId ? this.notes.get(this.currentNoteId) || null : null;
-  }
-
-  /**
    * Get all notes as array
    */
   getNotesArray(): Note[] {
     return Array.from(this.notes.values()).sort((a, b) => {
-      // Sort by orderIndex if available, otherwise by updatedAt
       if (a.orderIndex !== undefined && b.orderIndex !== undefined) {
         return a.orderIndex - b.orderIndex;
       }
@@ -223,7 +159,7 @@ export class StateManager {
     const note = this.notes.get(noteId);
     if (!note) return false;
 
-    return this.updateNote(noteId, { orderIndex: newIndex });
+    return this.updateNote(noteId, {orderIndex: newIndex});
   }
 
   /**
@@ -233,93 +169,21 @@ export class StateManager {
     const note = this.notes.get(noteId);
     if (!note) return false;
 
-    return this.updateNote(noteId, { url, siteName });
-  }
-
-  /**
-   * Generate unique ID
-   */
-  private generateId(): string {
-        return `note_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-  }
-
-  /**
-   * Initialize history for a note
-   */
-  private initializeHistory(note: Note): void {
-    if (!this.noteHistories.has(note.id)) {
-      this.noteHistories.set(note.id, {
-        past: [],
-        present: {
-          content: note.content,
-          title: note.title,
-          timestamp: Date.now()
-        },
-        future: []
-      });
-    }
+    return this.updateNote(noteId, {url, siteName});
   }
 
   /**
    * Record current state to history before making changes (debounced)
    */
   recordHistory(noteId: string): void {
-    // Get or create debounced function for this note
     if (!this.debouncedRecordHistory.has(noteId)) {
       this.debouncedRecordHistory.set(
         noteId,
-        debounce(() => this.recordHistoryImmediate(noteId), HISTORY.DEBOUNCE_DELAY)
+        debounce(() => this.recordHistoryImmediate(noteId), HISTORY.DEBOUNCE_DELAY),
       );
     }
 
-    // Call debounced version
     this.debouncedRecordHistory.get(noteId)!();
-  }
-
-  /**
-   * Actually record history (called by debounced version)
-   */
-  private recordHistoryImmediate(noteId: string): void {
-    const note = this.notes.get(noteId);
-    if (!note) return;
-
-    // Initialize history if it doesn't exist
-    this.initializeHistory(note);
-
-    const history = this.noteHistories.get(noteId)!;
-
-    // Check if state has actually changed (prevent duplicates)
-    if (this.isHistoryStateSame(history.present, note)) {
-      return;
-    }
-
-    // Push current present to past
-    history.past.push({ ...history.present });
-
-    // Limit past size
-    if (history.past.length > this.MAX_HISTORY_SIZE) {
-      history.past.shift(); // Remove oldest
-    }
-
-    // Clear future (new changes invalidate redo)
-    history.future = [];
-
-    // Update present
-    history.present = {
-      content: note.content,
-      title: note.title,
-      timestamp: Date.now()
-    };
-
-    // Emit event so UI can update button states
-    this.emit('history-changed', noteId);
-  }
-
-  /**
-   * Check if history state is the same as note (for deduplication)
-   */
-  private isHistoryStateSame(state: HistoryState, note: Note): boolean {
-    return state.content === note.content && state.title === note.title;
   }
 
   /**
@@ -329,16 +193,12 @@ export class StateManager {
     const history = this.noteHistories.get(noteId);
     if (!history || history.past.length === 0) return null;
 
-    // Move present to future
-    history.future.push({ ...history.present });
+    history.future.push({...history.present});
 
-    // Pop from past
     const previousState = history.past.pop()!;
 
-    // Set as present
     history.present = previousState;
 
-    // Emit events
     this.emit('history-changed', noteId);
     this.emit('undo-applied', noteId, previousState);
 
@@ -352,16 +212,12 @@ export class StateManager {
     const history = this.noteHistories.get(noteId);
     if (!history || history.future.length === 0) return null;
 
-    // Move present to past
-    history.past.push({ ...history.present });
+    history.past.push({...history.present});
 
-    // Pop from future
     const nextState = history.future.pop()!;
 
-    // Set as present
     history.present = nextState;
 
-    // Emit events
     this.emit('history-changed', noteId);
     this.emit('redo-applied', noteId, nextState);
 
@@ -396,11 +252,130 @@ export class StateManager {
    * Cleanup
    */
   destroy(): void {
-    // Remove broadcast message listener to prevent memory leaks
     this.broadcast.offMessage(this.broadcastMessageHandler);
     this.broadcast.close();
     this.eventListeners.clear();
     this.noteHistories.clear();
     this.debouncedRecordHistory.clear();
+  }
+
+  /**
+   * Event emitter - Emit event
+   */
+  private emit(event: string, ...args: any[]): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.forEach(callback => {
+        try {
+          callback(...args);
+        } catch (error) {
+          console.error(`Error in event listener for ${event}:`, error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Load notes from storage
+   */
+  private loadNotes(): void {
+    const notes = this.storage.getAllNotes();
+    this.notes.clear();
+    notes.forEach(note => this.notes.set(note.id, note));
+    this.emit('notes-loaded', this.getNotesArray());
+  }
+
+  /**
+   * Handle broadcast messages from other tabs
+   */
+  private handleBroadcastMessage(message: BroadcastMessage): void {
+    switch (message.type) {
+      case 'note-created':
+        if (message.note) {
+          this.notes.set(message.note.id, message.note);
+          this.emit('note-changed', message.note);
+        }
+        break;
+
+      case 'note-updated':
+        if (message.note) {
+          this.notes.set(message.note.id, message.note);
+          this.emit('note-updated', message.note);
+        }
+        break;
+
+      case 'note-deleted':
+        this.notes.delete(message.noteId);
+        this.emit('note-deleted', message.noteId);
+
+        if (this.currentNoteId === message.noteId) {
+          this.currentNoteId = null;
+          this.emit('note-selected', null);
+        }
+        break;
+    }
+  }
+
+  /**
+   * Generate unique ID
+   */
+  private generateId(): string {
+    return `note_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+
+  /**
+   * Initialize history for a note
+   */
+  private initializeHistory(note: Note): void {
+    if (!this.noteHistories.has(note.id)) {
+      this.noteHistories.set(note.id, {
+        past: [],
+        present: {
+          content: note.content,
+          title: note.title,
+          timestamp: Date.now(),
+        },
+        future: [],
+      });
+    }
+  }
+
+  /**
+   * Actually record history (called by debounced version)
+   */
+  private recordHistoryImmediate(noteId: string): void {
+    const note = this.notes.get(noteId);
+    if (!note) return;
+
+    this.initializeHistory(note);
+
+    const history = this.noteHistories.get(noteId)!;
+
+    if (this.isHistoryStateSame(history.present, note)) {
+      return;
+    }
+
+    history.past.push({...history.present});
+
+    if (history.past.length > this.MAX_HISTORY_SIZE) {
+      history.past.shift();
+    }
+
+    history.future = [];
+
+    history.present = {
+      content: note.content,
+      title: note.title,
+      timestamp: Date.now(),
+    };
+
+    this.emit('history-changed', noteId);
+  }
+
+  /**
+   * Check if history state is the same as note (for deduplication)
+   */
+  private isHistoryStateSame(state: HistoryState, note: Note): boolean {
+    return state.content === note.content && state.title === note.title;
   }
 }

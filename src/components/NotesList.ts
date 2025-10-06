@@ -3,11 +3,11 @@
  * Features: display notes, create, delete, select
  */
 
-import { Note } from '../types.js';
-import { StateManager } from '../core/state.js';
-import { getCurrentSiteInfo, groupByHostname } from '../utils/url.js';
-import { DeletePopup } from './DeletePopup.js';
-import { debounce } from '../utils/debounce.js';
+import {Note} from '../types.js';
+import {StateManager} from '../core/state.js';
+import {getCurrentSiteInfo, groupByHostname} from '../utils/url.js';
+import {DeletePopup} from './DeletePopup.js';
+import {debounce} from '../utils/debounce.js';
 
 export class NotesList {
   private listElement: HTMLElement;
@@ -33,7 +33,7 @@ export class NotesList {
     newNoteButton: HTMLElement,
     searchInput: HTMLInputElement,
     viewToggle: HTMLElement,
-    stateManager: StateManager
+    stateManager: StateManager,
   ) {
     this.listElement = listElement;
     this.newNoteButton = newNoteButton;
@@ -42,14 +42,19 @@ export class NotesList {
     this.stateManager = stateManager;
     this.deletePopup = new DeletePopup();
 
-    // Create shared div for HTML escaping
     this.sharedEscapeDiv = document.createElement('div');
 
-    // Debounce render to prevent excessive re-renders
     this.debouncedRender = debounce(() => this.render(), 100);
 
-    this.initCurrentHostname();
+    void this.initCurrentHostname();
     this.setupEventListeners();
+  }
+
+  /**
+   * Cleanup - destroy delete popup
+   */
+  destroy(): void {
+    this.deletePopup.destroy();
   }
 
   /**
@@ -59,7 +64,6 @@ export class NotesList {
     const siteInfo = await getCurrentSiteInfo();
     if (siteInfo) {
       this.currentHostname = groupByHostname(siteInfo.url);
-      // Auto-expand current site's group
       this.expandedGroups.add(this.currentHostname);
       this.render();
     }
@@ -69,27 +73,22 @@ export class NotesList {
    * Set up event listeners
    */
   private setupEventListeners(): void {
-    // New note button
     this.newNoteButton.addEventListener('click', () => this.handleNewNote());
 
-    // Search input
     this.searchInput.addEventListener('input', (e) => {
       this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
       this.render();
     });
 
-    // View toggle button
     this.viewToggle.addEventListener('click', () => {
       this.isGroupedView = !this.isGroupedView;
       this.updateViewToggle();
       this.render();
     });
 
-    // Note list clicks (using event delegation)
     this.listElement.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
 
-      // Accordion toggle
       if (target.closest('.accordion-header')) {
         e.stopPropagation();
         const header = target.closest('.accordion-header') as HTMLElement;
@@ -100,7 +99,6 @@ export class NotesList {
         return;
       }
 
-      // Delete button
       if (target.closest('.note-delete-btn')) {
         e.stopPropagation();
         const noteItem = target.closest('.note-item') as HTMLElement;
@@ -110,7 +108,6 @@ export class NotesList {
         return;
       }
 
-      // Note item
       const noteItem = target.closest('.note-item') as HTMLElement;
       if (noteItem) {
         this.handleSelectNote(noteItem.dataset.noteId!);
@@ -196,7 +193,7 @@ export class NotesList {
   private extractPlainText(html: string): string {
     this.sharedEscapeDiv.innerHTML = html;
     const text = this.sharedEscapeDiv.textContent || this.sharedEscapeDiv.innerText || '';
-    this.sharedEscapeDiv.innerHTML = ''; // Clean up
+    this.sharedEscapeDiv.innerHTML = '';
     return text;
   }
 
@@ -214,13 +211,10 @@ export class NotesList {
     this.deletePopup.show(
       event,
       () => {
-        // On confirm
         this.stateManager.deleteNote(noteId);
       },
-      () => {
-        // On cancel (optional)
-        // Do nothing
-      }
+      () => { /* Cancelled */
+      },
     );
   }
 
@@ -230,7 +224,6 @@ export class NotesList {
   private render(): void {
     let notes = this.stateManager.getNotesArray();
 
-    // Apply search filter
     notes = this.filterNotes(notes);
 
     if (notes.length === 0) {
@@ -243,28 +236,22 @@ export class NotesList {
     }
 
     if (this.isGroupedView) {
-      // Grouped view (accordion)
       const grouped = this.groupNotesByHostname(notes);
 
-      // Sort groups: current site first, then alphabetically
       const sortedGroups = Array.from(grouped.entries()).sort((a, b) => {
         const [groupA] = a;
         const [groupB] = b;
 
-        // Current hostname always first
         if (groupA === this.currentHostname) return -1;
         if (groupB === this.currentHostname) return 1;
 
-        // Then alphabetically
         return groupA.localeCompare(groupB);
       });
 
-      // Render accordions
       this.listElement.innerHTML = sortedGroups
         .map(([groupName, groupNotes]) => this.renderAccordion(groupName, groupNotes))
         .join('');
     } else {
-      // List view (flat list, no grouping)
       this.listElement.innerHTML = notes
         .map(note => this.renderNoteItem(note))
         .join('');
@@ -340,7 +327,7 @@ export class NotesList {
   private getPreview(content: string): string {
     this.sharedEscapeDiv.innerHTML = content;
     const text = this.sharedEscapeDiv.textContent || this.sharedEscapeDiv.innerText || '';
-    this.sharedEscapeDiv.innerHTML = ''; // Clean up
+    this.sharedEscapeDiv.innerHTML = '';
 
     return text.substring(0, 50) + (text.length > 50 ? '...' : '');
   }
@@ -362,7 +349,6 @@ export class NotesList {
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
 
-    // For older notes, show date
     const date = new Date(timestamp);
     return date.toLocaleDateString();
   }
@@ -398,7 +384,6 @@ export class NotesList {
       return;
     }
 
-    // Allow dragging from the entire note item
     this.draggedNoteId = noteItem.dataset.noteId!;
     noteItem.classList.add('dragging');
 
@@ -423,22 +408,18 @@ export class NotesList {
       e.dataTransfer.dropEffect = 'move';
     }
 
-    // Remove previous drop zone indicators
     this.listElement.querySelectorAll('.drop-zone').forEach(el => el.classList.remove('drop-zone'));
 
     if (noteItem && noteItem.dataset.noteId !== this.draggedNoteId) {
-      // Hovering over another note
       this.draggedOverNoteId = noteItem.dataset.noteId!;
       noteItem.classList.add('drop-zone');
     } else if (accordionContent && !noteItem) {
-      // Hovering over accordion content area (empty space)
       const accordionHeader = accordionGroup?.querySelector('.accordion-header') as HTMLElement;
       if (accordionHeader) {
         this.draggedOverGroup = accordionHeader.dataset.group!;
         accordionContent.classList.add('drop-zone');
       }
     } else if (accordionGroup && !accordionContent) {
-      // Hovering over accordion header
       const accordionHeader = accordionGroup.querySelector('.accordion-header') as HTMLElement;
       if (accordionHeader) {
         this.draggedOverGroup = accordionHeader.dataset.group!;
@@ -470,10 +451,8 @@ export class NotesList {
     const accordionGroup = target.closest('.accordion-group') as HTMLElement;
 
     if (noteItem && noteItem.dataset.noteId !== this.draggedNoteId) {
-      // Dropped on another note - reorder
       this.handleNoteReorder(this.draggedNoteId, noteItem.dataset.noteId!);
     } else if (accordionContent || accordionGroup) {
-      // Dropped on accordion - change site
       const accordionHeader = accordionGroup?.querySelector('.accordion-header') as HTMLElement;
       if (accordionHeader) {
         const targetGroup = accordionHeader.dataset.group!;
@@ -495,7 +474,6 @@ export class NotesList {
    * Clear drag state
    */
   private clearDragState(): void {
-    // Remove dragging class
     this.listElement.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
     this.listElement.querySelectorAll('.drop-zone').forEach(el => el.classList.remove('drop-zone'));
 
@@ -514,17 +492,14 @@ export class NotesList {
 
     if (!draggedNote || !targetNote) return;
 
-    // Get notes in the same group
     const draggedGroup = draggedNote.url ? groupByHostname(draggedNote.url) : 'Uncategorized';
     const targetGroup = targetNote.url ? groupByHostname(targetNote.url) : 'Uncategorized';
 
     if (draggedGroup !== targetGroup && this.isGroupedView) {
-      // Different groups - move to new group first
       this.handleNoteSiteChange(draggedId, targetGroup);
       return;
     }
 
-    // Reorder within group
     const groupNotes = notes.filter(n => {
       const noteGroup = n.url ? groupByHostname(n.url) : 'Uncategorized';
       return noteGroup === targetGroup;
@@ -535,12 +510,10 @@ export class NotesList {
 
     if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return;
 
-    // Remove dragged note and reinsert at target position
     const reorderedNotes = [...groupNotes];
     const [draggedItem] = reorderedNotes.splice(draggedIndex, 1);
     reorderedNotes.splice(targetIndex, 0, draggedItem);
 
-    // Update order indices for all notes in the group
     reorderedNotes.forEach((note, index) => {
       this.stateManager.reorderNote(note.id, index);
     });
@@ -557,7 +530,6 @@ export class NotesList {
 
     if (currentGroup === targetGroup) return;
 
-    // Find a note in the target group to get URL pattern
     const allNotes = this.stateManager.getNotesArray();
     const targetGroupNote = allNotes.find(n => {
       const noteGroup = n.url ? groupByHostname(n.url) : 'Uncategorized';
@@ -569,12 +541,5 @@ export class NotesList {
     } else if (targetGroup === 'Uncategorized') {
       this.stateManager.updateNoteSite(noteId, '', '');
     }
-  }
-
-  /**
-   * Cleanup - destroy delete popup
-   */
-  destroy(): void {
-    this.deletePopup.destroy();
   }
 }

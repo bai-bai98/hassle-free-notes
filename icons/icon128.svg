@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
-  <rect width="128" height="128" fill="#3b82f6"/>
-  <rect x="25.6" y="25.6" width="76.8" height="76.8" fill="white"/>
-  <line x1="38.4" y1="51.2" x2="89.6" y2="51.2" stroke="#3b82f6" stroke-width="4"/>
-  <line x1="38.4" y1="64" x2="89.6" y2="64" stroke="#3b82f6" stroke-width="4"/>
-  <line x1="38.4" y1="76.8" x2="89.6" y2="76.8" stroke="#3b82f6" stroke-width="4"/>
-</svg>
