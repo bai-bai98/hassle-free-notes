@@ -121,7 +121,7 @@ npm run watch
 ### Netlify Deployment
 
 ```
-https://animated-dieffenbachia-fae333.netlify.app/ 
+https://hassle-free-notes.netlify.app/ 
 ```
 ## 📖 Usage Guide
 
