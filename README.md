@@ -92,8 +92,7 @@ Search across all notes in real-time:
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd multi-tab-note-taking-app-pmjeon
+   git clone https://github.com/bai-bai98/hassle-free-notes.git
    ```
 
 2. **Install dependencies**
@@ -119,7 +118,11 @@ For development with auto-recompilation:
 ```bash
 npm run watch
 ```
+### Netlify Deployment
 
+```
+https://hassle-free-notes.netlify.app/ 
+```
 ## 📖 Usage Guide
 
 ### Creating Your First Note
@@ -127,11 +130,10 @@ npm run watch
 1. **Open the extension** via:
    - Click the extension icon in your toolbar
    - Right-click anywhere and select "Open Hassle Free Notes"
-   - Use the side panel (if enabled)
 
 2. **Click "New Note"** in the sidebar
 
-3. **Start typing!** The editor auto-focuses and auto-saves
+3. **Start typing!** The editor auto-saves
 
 ### Formatting Text
 
@@ -245,7 +247,7 @@ npm run watch
 
 ## 🎯 Development Goals Achieved
 
-This project was built as a senior developer challenge to demonstrate:
+This project was built as a intermediate developer challenge to demonstrate:
 
 ✅ **Vanilla code expertise** - Zero frameworks, pure TypeScript
 ✅ **Modern browser APIs** - BroadcastChannel, ContentEditable, localStorage
