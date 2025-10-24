@@ -263,10 +263,6 @@ This project was built as a intermediate developer challenge to demonstrate:
 
 This was a coding challenge submission, but suggestions and feedback are welcome!
 
-## 📄 License
-
-This project was created as a coding challenge for Klar! Team.
-
 ---
 
 **Built with ❤️ and vanilla TypeScript** by a developer who believes native browser APIs are underrated.
